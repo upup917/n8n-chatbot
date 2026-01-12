@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPA Support - Prince of Songkla University</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 h-screen flex flex-col items-center justify-center">
+
+    <div class="w-full max-w-3xl h-full md:h-[90vh] bg-white md:rounded-2xl shadow-xl flex flex-col overflow-hidden relative">
+        
+        <div id="welcome-screen" class="flex-1 flex flex-col items-center justify-center p-8 transition-all duration-500">
+            
+            <div class="w-28 h-28 mb-6 transition-transform hover:scale-105 duration-300">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PSU_Logo.svg/250px-PSU_Logo.svg.png?20250131151901" 
+                     alt="PSU Logo" 
+                     class="w-full h-full object-contain drop-shadow-md">
+            </div>
+
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">RPA Chatbot</h1>
+            <p class="text-gray-500 mb-10 text-center">ระบบ RPA Support อัตโนมัติ มหาวิทยาลัยสงขลานครินทร์</p>
+
+            <div class="flex flex-wrap gap-4 justify-center w-full max-w-2xl">
+                <button onclick="sendSuggestion('ฉันเบิกเงินไม่ได้', 'p:rpa')" class="suggestion-card group hover:border-indigo-300">
+                    <div class="icon-circle bg-indigo-100 text-indigo-600">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                    <span class="text-gray-700 font-medium">ฉันเบิกเงินไม่ได้</span>
+                </button>
+
+                <button onclick="sendSuggestion('ดูประวัติการเบิกได้จากไหน', 'p:workflow')" class="suggestion-card group hover:border-green-300">
+                    <div class="icon-circle bg-green-100 text-green-600">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <span class="text-gray-700 font-medium">ดูประวัติการเบิกได้จากไหน</span>
+                </button>
+
+                <button onclick="sendSuggestion('นายทำอะไรได้บ้าง', 'p:greeting')" class="suggestion-card group hover:border-orange-300">
+                    <div class="icon-circle bg-orange-100 text-orange-600">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <span class="text-gray-700 font-medium">นายเป็นใคร</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="chat-wrapper" class="hidden flex-col h-full">
+            
+            <div class="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shadow-sm z-10 shrink-0">
+                <div class="flex items-center gap-3">
+                    
+                    <div class="w-10 h-10 flex items-center justify-center">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PSU_Logo.svg/1200px-PSU_Logo.svg.png" 
+                             alt="PSU Logo" 
+                             class="w-full h-full object-contain">
+                    </div>
+
+                    <span class="font-semibold text-gray-700">RPA Chatbot</span>
+                </div>
+                <button id="end-chat-btn" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                    <i class="fa-solid fa-power-off"></i>
+                    จบการสนทนา
+                </button>
+            </div>
+
+            <div id="chat-container" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-white">
+                </div>
+
+            <div class="p-4 bg-white border-t border-gray-100 relative shrink-0">
+                
+                <div id="quick-replies" class="hidden absolute bottom-full left-0 w-full px-4 pb-2 flex gap-2 overflow-x-auto no-scrollbar mask-gradient z-20">
+                    </div>
+
+                <div class="relative flex items-center max-w-4xl mx-auto">
+                    <input type="text" id="user-input" 
+                        class="w-full pl-6 pr-14 py-4 rounded-full border border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm text-gray-700 placeholder-gray-400"
+                        placeholder="ถามเกี่ยวกับทุนวิจัยและการเบิกจ่าย...">
+                    
+                    <button id="send-btn" 
+                        class="absolute right-2 p-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full transition-colors shadow-md w-10 h-10 flex items-center justify-center">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </div>
+                <div class="text-center mt-2 text-xs text-gray-400">RPA Chatbot,PSU</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
