@@ -1,7 +1,8 @@
 // --- CONFIGURATION ---
 const CONFIG = {
     // ⚠️ อย่าลืมเปลี่ยนเป็น Production URL เมื่อใช้งานจริง
-    WEBHOOK_URL: 'https://flag-located-clear-asian.trycloudflare.com/webhook/21c6544a-7af4-4b9b-ab08-6ab41456a75d', 
+    // WEBHOOK_URL: 'https://flag-located-clear-asian.trycloudflare.com/webhook/21c6544a-7af4-4b9b-ab08-6ab41456a75d', 
+    WEBHOOK_URL: 'http://localhost:5678/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
     RESPONSE_KEY: 'output',
