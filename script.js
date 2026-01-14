@@ -1,7 +1,7 @@
 // --- CONFIGURATION ---
 const CONFIG = {
     // ⚠️ อย่าลืมเปลี่ยนเป็น Production URL เมื่อใช้งานจริง
-    // WEBHOOK_URL: 'https://flag-located-clear-asian.trycloudflare.com/webhook/21c6544a-7af4-4b9b-ab08-6ab41456a75d', 
+    //    WEBHOOK_URL: 'https://jon-shaft-success-housing.trycloudflare.com/webhook/21c6544a-7af4-4b9b-ab08-6ab41456a75d', 
     WEBHOOK_URL: 'http://localhost:5678/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
@@ -99,8 +99,6 @@ function resetUI() {
 }
 
 // 4. ฟังก์ชันส่งข้อความ
-// ... (ส่วนบนเหมือนเดิม) ...
-
 async function sendMessage(displayMessage, inputMessage, triggerCode) {
     startChatUI();
 
@@ -150,16 +148,13 @@ async function sendMessage(displayMessage, inputMessage, triggerCode) {
             } catch (e) {}
         }
 
-        // 🔥🔥🔥 4. (ส่วนที่เพิ่มใหม่) ดักจับ p:greeting ที่หน้าบ้าน 🔥🔥🔥
-        // ถ้า triggerCode ที่ส่งไปคือ 'p:greeting' ให้ยัดปุ่ม 2 อันนี้เข้าไปทันที
+        // 🔥 ดักจับ p:greeting ที่หน้าบ้าน
         if (triggerCode === 'p:greeting') {
             options = [
                 { label: "💸 ฉันเบิกเงินไม่ได้", value: "p:rpa" },
                 { label: "📜 ดูประวัติการเบิกได้จากไหน", value: "p:workflow" }
             ];
         }
-        // 🔥🔥🔥 จบส่วนที่เพิ่ม 🔥🔥🔥
-
 
         // --- 5. จัดการข้อความและแสดงผล ---
         let finalMessage = '';
@@ -171,7 +166,7 @@ async function sendMessage(displayMessage, inputMessage, triggerCode) {
 
         addMessage(finalMessage, 'bot');
 
-        // แสดงปุ่ม (ถ้ามี options ไม่ว่าจะมาจาก n8n หรือที่เราดักไว้)
+        // แสดงปุ่ม (ถ้ามี options)
         if (options.length > 0) {
             renderQuickReplies(options);
         } 
@@ -182,8 +177,6 @@ async function sendMessage(displayMessage, inputMessage, triggerCode) {
         addMessage("⚠️ Error", 'bot');
     }
 }
-
-// ... (ส่วนล่างเหมือนเดิม) ...
 
 function renderQuickReplies(options) {
     const container = elements.quickReplies;
@@ -203,6 +196,9 @@ function renderQuickReplies(options) {
         
         container.appendChild(btn);
     });
+
+    // ✨✨✨ ส่วนที่เพิ่ม: สั่งให้เลื่อนจอลงเมื่อมีปุ่มเด้งขึ้นมา ✨✨✨
+    setTimeout(scrollToBottom, 100);
 }
 
 function clearQuickReplies() {
@@ -210,11 +206,10 @@ function clearQuickReplies() {
     elements.quickReplies.classList.add('hidden');
 }
 
-// ✅ แก้ไขจุดที่ 2: ใช้ addMessage ตัวนี้ตัวเดียว (ลบตัวล่างทิ้งไปแล้ว)
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `chat-bubble ${sender === 'user' ? 'user-bubble' : 'bot-bubble'}`;
-    div.innerHTML = text; // text ถูก format มาแล้วจาก sendMessage
+    div.innerHTML = text; 
     elements.chatContainer.appendChild(div);
     scrollToBottom();
 }
