@@ -1,10 +1,10 @@
 // --- CONFIGURATION ---
 const CONFIG = {
-    // ⚠️ อย่าลืมเช็ค URL นี้ให้ตรงกับ Tunnel ล่าสุดของคุณ
+    // ⚠️ ตรวจสอบ URL นี้ให้ตรงกับ n8n Tunnel ของคุณ
     WEBHOOK_URL: 'http://localhost:5678/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
-    RESPONSE_KEY: 'output',
+    RESPONSE_KEY: 'output', // Key หลักที่ n8n ส่งกลับมา
     SESSION_TIMEOUT_MS: 15 * 60 * 1000 
 };
 
@@ -27,36 +27,25 @@ elements.endChatBtn.addEventListener('click', resetChat);
 
 // --- FUNCTIONS ---
 
-// ฟังก์ชันจัดการ Session ID (แบบรันเลข s1, s2, s3...)
+// ฟังก์ชันจัดการ Session ID
 function getChatMetadata() {
-    // 1. จัดการ User ID
     let userId = localStorage.getItem('rpa_user_id');
     if (!userId) {
-        // สร้าง User ID แบบสั้นๆ (เช่น u_lz4f2x)
         userId = 'u_' + Date.now().toString(36);
         localStorage.setItem('rpa_user_id', userId);
     }
 
-    // 2. จัดการ Session ID
     let sessionId = localStorage.getItem('rpa_session_id');
     const lastActive = parseInt(localStorage.getItem('rpa_last_active') || '0');
     const now = Date.now();
 
-    // ถ้ายังไม่มี Session หรือหมดเวลา -> สร้างใหม่โดยการนับเลขเพิ่ม
     if (!sessionId || (now - lastActive > CONFIG.SESSION_TIMEOUT_MS)) {
-        // ดึงตัวนับล่าสุดมา (ถ้าไม่มีให้เริ่มที่ 0)
         let currentCount = parseInt(localStorage.getItem('rpa_session_count') || '0');
-        
-        // บวกเพิ่ม 1
         currentCount++; 
-        
-        // สร้าง ID ใหม่: s1, s2, s3...
         sessionId = 's' + currentCount; 
 
-        // บันทึกค่าใหม่ลงเครื่อง
         localStorage.setItem('rpa_session_count', currentCount);
         localStorage.setItem('rpa_session_id', sessionId);
-        
         console.log("New Session Generated:", sessionId);
     }
 
@@ -64,29 +53,21 @@ function getChatMetadata() {
     return { userId, sessionId };
 }
 
-// 1. กรณีพิมพ์เอง -> ส่ง Trigger = null (ให้ AI ตอบ)
 function handleInputSubmit() {
     const text = elements.userInput.value.trim();
     if (!text) return;
     sendMessage(text, text, null); 
 }
 
-// 2. กรณีคลิกปุ่ม FAQ หน้าแรก -> ส่ง Trigger = 'faq' (ให้ DB ตอบ)
 function sendSuggestion(text) {
-    // ส่ง text เดียวกันทั้ง display และ input
-    // บังคับ Trigger เป็น 'faq' เพื่อให้ n8n รู้ว่าต้อง query DB
     sendMessage(text, text, 'faq');
 }
 window.sendSuggestion = sendSuggestion;
 
-// 3. รีเซ็ตแชท (แจ้ง Server จบ + ล้างหน้าจอ + ลบ Session ID)
 async function resetChat() {
     if (!confirm("ต้องการล้างประวัติการสนทนา?")) return;
     
-    // ดึง ID เก่ามาก่อน เพื่อส่งไปบอกลา n8n
     const { userId, sessionId } = getChatMetadata();
-
-    // ส่ง Trigger "end_chat" ไปบอก n8n
     try {
         fetch(CONFIG.WEBHOOK_URL, {
             method: 'POST',
@@ -100,24 +81,17 @@ async function resetChat() {
         });
     } catch (e) { console.error("แจ้งจบการสนทนาไม่สำเร็จ", e); }
 
-    // ล้างหน้าจอ
     elements.chatContainer.innerHTML = `
         <div class="chat-bubble bot-bubble">
             สวัสดีครับ มีเรื่องสงสัยเกี่ยวกับ RPA หรือการเบิกจ่าย สอบถามผมได้เลยครับ 👇
         </div>
     `;
-    
-    // ลบเฉพาะ Session ID (เพื่อให้ getChatMetadata ครั้งหน้าไปบวกเลขสร้างใหม่)
-    // *สำคัญ* ห้ามลบ rpa_session_count นะครับ ไม่งั้นมันจะเริ่ม s1 ใหม่
     localStorage.removeItem('rpa_session_id'); 
-    
-    // คืนค่าปุ่ม FAQ กลับมา
     renderDefaultButtons();
 }
 
-// 4. ฟังก์ชันหลักส่งข้อความ
+// --- CORE FUNCTION: ส่งและรับข้อความ ---
 async function sendMessage(displayMessage, inputMessage, triggerCode) {
-    // ซ่อนปุ่ม Quick Reply เก่าทันที
     elements.quickReplies.classList.add('hidden'); 
 
     if (displayMessage) {
@@ -145,46 +119,93 @@ async function sendMessage(displayMessage, inputMessage, triggerCode) {
         const data = await response.json();
         removeLoading(loadingId);
         
-        // เตรียมข้อมูล Response
-        let rawText = data[CONFIG.RESPONSE_KEY] || data.output || data.text || '';
-        let options = [];
-
-        if (typeof data === 'object') {
-            if (data.options && Array.isArray(data.options)) options = data.options;
-            if (typeof rawText === 'object') rawText = rawText.output || rawText.text || JSON.stringify(rawText);
-        }
-        
-        // รองรับ JSON String ที่อาจหลุดมา
-        if (typeof rawText === 'string' && rawText.trim().startsWith('{')) {
-            try {
-                const parsed = JSON.parse(rawText);
-                rawText = parsed.output || parsed.text || rawText;
-                if (parsed.options) options = parsed.options;
-            } catch (e) {}
-        }
-
-        let finalMessage = '';
-        if (typeof rawText === 'string') {
-             finalMessage = rawText.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\n/g, '<br>');
-        } else {
-             finalMessage = JSON.stringify(rawText);
-        }
+        // 🔥 เรียกใช้ Smart Parser เพื่อแกะข้อมูล (แก้ปัญหา Options ไม่ขึ้น)
+        const { finalMessage, finalOptions } = parseResponseData(data);
 
         addMessage(finalMessage, 'bot');
 
-        // ถ้ามี Options ใหม่ส่งมา ให้โชว์ปุ่ม
-        if (options.length > 0) {
-            renderQuickReplies(options);
+        // ถ้ามี Options ให้แสดงปุ่ม
+        if (finalOptions.length > 0) {
+            renderQuickReplies(finalOptions);
         } 
 
     } catch (error) {
-        console.error(error);
+        console.error("Error:", error);
         removeLoading(loadingId);
         addMessage("⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่", 'bot');
     }
 }
 
-// ฟังก์ชันสร้างปุ่มตัวเลือก (Follow-up)
+// 🔥 ฟังก์ชันอัจฉริยะสำหรับแกะ Response (แก้ Bug ตรงนี้)
+function parseResponseData(data) {
+    let text = '';
+    let options = [];
+
+    // Helper: พยายามดึง text และ options จาก object ใดๆ
+    const extract = (obj) => {
+        return {
+            t: obj[CONFIG.RESPONSE_KEY] || obj.output || obj.text || obj.response || '',
+            o: obj.options || obj.suggestions || []
+        };
+    };
+
+    // 1. ดึงจาก Data ชั้นแรกสุด
+    let extracted = extract(data);
+    text = extracted.t;
+    options = extracted.o;
+
+    // 2. ถ้า text ที่ได้มา ดันเป็น Object (Nested JSON) ให้มุดเข้าไปดึงอีกรอบ
+    if (typeof text === 'object' && text !== null) {
+        const nested = extract(text);
+        // ถ้าข้างในมี text ให้เอามาใช้
+        if (nested.t) text = nested.t;
+        // ถ้าข้างในมี options ให้เอามาทับของเดิม (เพราะแม่นยำกว่า)
+        if (nested.o && Array.isArray(nested.o) && nested.o.length > 0) {
+            options = nested.o;
+        }
+        
+        // ถ้ายังเป็น Object อยู่ ให้ลองแปลงเป็น String เพื่อเตรียม Parse ต่อ
+        if (typeof text === 'object') text = JSON.stringify(text);
+    }
+
+    // 3. ถ้า text เป็น String และหน้าตาเหมือน JSON (เช่น AI ตอบมาเป็น JSON String)
+    if (typeof text === 'string') {
+        // ล้าง Markdown Code Block ออกก่อน (```json ... ```)
+        const cleanJson = text.trim()
+            .replace(/^```json/i, '')
+            .replace(/^```/i, '')
+            .replace(/```$/i, '')
+            .trim();
+
+        if (cleanJson.startsWith('{') || cleanJson.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(cleanJson);
+                const parsedData = extract(parsed);
+                
+                // อัปเดต text และ options จาก JSON ที่แกะได้
+                if (parsedData.t) text = parsedData.t;
+                if (parsedData.o && Array.isArray(parsedData.o) && parsedData.o.length > 0) {
+                    options = parsedData.o;
+                }
+            } catch (e) {
+                // ถ้า Parse ไม่ผ่าน ก็ใช้ text เดิมไป
+                console.log("Not a valid JSON string, using raw text.");
+            }
+        }
+    }
+
+    // 4. จัดรูปแบบข้อความสุดท้าย (ลบ Quote, เปลี่ยน \n เป็น <br>)
+    let formattedText = '';
+    if (typeof text === 'string') {
+        formattedText = text.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\n/g, '<br>');
+    } else {
+        formattedText = JSON.stringify(text); // กันเหนียว
+    }
+
+    return { finalMessage: formattedText, finalOptions: options };
+}
+
+// ฟังก์ชันสร้างปุ่มตัวเลือก
 function renderQuickReplies(options) {
     const container = elements.quickReplies;
     container.innerHTML = ''; 
@@ -197,21 +218,16 @@ function renderQuickReplies(options) {
         btn.style.animationDelay = `${index * 0.05}s`;
 
         btn.onclick = () => {
-            // กรณีเป็นปุ่มตัวเลือกจาก AI -> ส่ง Trigger = null (เพื่อให้ AI ตอบ)
-            // เราไม่ใช้ sendSuggestion() เพราะนั่นมันบังคับเป็น 'faq'
             const textToSend = opt.value || opt.label;
             sendMessage(textToSend, textToSend, null); 
         };
         container.appendChild(btn);
     });
-    // เลื่อนจอลง
     setTimeout(scrollToBottom, 100);
 }
 
-// ฟังก์ชันคืนค่าปุ่ม FAQ เริ่มต้น (สำหรับตอน Reset)
 function renderDefaultButtons() {
     const container = elements.quickReplies;
-    // ใส่ปุ่มให้ตรงกับใน HTML ของคุณ
     container.innerHTML = `
         <button onclick="sendSuggestion('ผมเบิกเงินไม่ได้')" class="chip-btn">
             <i class="fa-solid fa-money-bill-wave mr-1"></i> ผมเบิกเงินไม่ได้
