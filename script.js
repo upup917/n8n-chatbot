@@ -246,7 +246,30 @@ function renderDefaultButtons() {
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `chat-bubble ${sender === 'user' ? 'user-bubble' : 'bot-bubble'}`;
-    div.innerHTML = text; 
+    div.innerHTML = text; // ใส่ข้อความก่อน
+
+    // 🔥 ถ้าเป็น Bot ให้เพิ่มปุ่ม Like/Dislike
+    if (sender === 'bot') {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'feedback-container';
+        
+        // ปุ่ม Like
+        const likeBtn = document.createElement('button');
+        likeBtn.className = 'feedback-btn';
+        likeBtn.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
+        likeBtn.onclick = function() { sendFeedback(this, 'like', text); }; // ส่งข้อความ text กลับไปบันทึก
+
+        // ปุ่ม Dislike
+        const dislikeBtn = document.createElement('button');
+        dislikeBtn.className = 'feedback-btn';
+        dislikeBtn.innerHTML = '<i class="fa-solid fa-thumbs-down"></i>';
+        dislikeBtn.onclick = function() { sendFeedback(this, 'dislike', text); };
+
+        feedbackDiv.appendChild(likeBtn);
+        feedbackDiv.appendChild(dislikeBtn);
+        div.appendChild(feedbackDiv);
+    }
+
     elements.chatContainer.appendChild(div);
     scrollToBottom();
 }
@@ -269,4 +292,35 @@ function removeLoading(id) {
 
 function scrollToBottom() {
     elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+}
+
+// ฟังก์ชันส่ง Feedback (Like/Dislike)
+async function sendFeedback(btnElement, rating, messageContent) {
+    // 1. เปลี่ยนสีปุ่มให้รู้ว่ากดแล้ว
+    const parent = btnElement.parentElement;
+    const buttons = parent.querySelectorAll('.feedback-btn');
+    buttons.forEach(b => b.classList.remove('active-like', 'active-dislike')); // ล้างค่าเก่า
+    
+    if (rating === 'like') btnElement.classList.add('active-like');
+    else btnElement.classList.add('active-dislike');
+
+    // 2. ส่งข้อมูลไป n8n
+    const { userId, sessionId } = getChatMetadata();
+    
+    try {
+        await fetch(CONFIG.WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                [CONFIG.CHAT_INPUT_KEY]: messageContent, // ส่งเนื้อหาข้อความบอทไปเก็บด้วย
+                [CONFIG.TRIGGER_KEY]: 'feedback',       // Trigger พิเศษบอก n8n ว่านี่คือ feedback
+                rating: rating,                         // 'like' หรือ 'dislike'
+                userId: userId,
+                sessionId: sessionId
+            })
+        });
+        console.log(`Feedback sent: ${rating}`);
+    } catch (e) {
+        console.error("Failed to send feedback", e);
+    }
 }

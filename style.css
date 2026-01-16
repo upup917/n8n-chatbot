@@ -129,3 +129,39 @@ body { font-family: 'Prompt', sans-serif; }
 .chip-anim {
     animation: slideUpFade 0.3s ease-out forwards;
 }
+
+/* Feedback Buttons Styles */
+.feedback-container {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    justify-content: flex-end;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.chat-bubble:hover .feedback-container {
+    opacity: 1; /* โชว์ชัดขึ้นเมื่อเอาเมาส์ไปชี้ข้อความ */
+}
+
+.feedback-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #9CA3AF; /* สีเทาอ่อน */
+    transition: all 0.2s;
+    padding: 2px 5px;
+}
+
+.feedback-btn:hover {
+    transform: scale(1.2);
+}
+
+.feedback-btn.active-like {
+    color: #10B981; /* สีเขียว */
+}
+
+.feedback-btn.active-dislike {
+    color: #EF4444; /* สีแดง */
+}
