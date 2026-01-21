@@ -28,10 +28,12 @@ elements.endChatBtn.addEventListener('click', resetChat);
 // --- FUNCTIONS ---
 
 // ฟังก์ชันจัดการ Session ID
+// ฟังก์ชันจัดการ Session ID
 function getChatMetadata() {
     let userId = localStorage.getItem('rpa_user_id');
     if (!userId) {
-        userId = 'u_' + Date.now().toString(36);
+        // userId แบบสั้น (u + สุ่ม 5 หลัก)
+        userId = 'u' + Math.random().toString(36).substring(2, 7);
         localStorage.setItem('rpa_user_id', userId);
     }
 
@@ -39,12 +41,13 @@ function getChatMetadata() {
     const lastActive = parseInt(localStorage.getItem('rpa_last_active') || '0');
     const now = Date.now();
 
+    // ถ้าหมดเวลา หรือยังไม่มี Session -> สร้างใหม่
     if (!sessionId || (now - lastActive > CONFIG.SESSION_TIMEOUT_MS)) {
-        let currentCount = parseInt(localStorage.getItem('rpa_session_count') || '0');
-        currentCount++; 
-        sessionId = 's' + currentCount; 
+        
+        // 🔥 สูตรใหม่: s + สุ่ม 5 ตัวอักษร (เช่น sk8x9z)
+        // substring(2, 7) คือตัดเอาเลข 0. ข้างหน้าออก แล้วหยิบมา 5 ตัว
+        sessionId = 's' + Math.random().toString(36).substring(2, 7);
 
-        localStorage.setItem('rpa_session_count', currentCount);
         localStorage.setItem('rpa_session_id', sessionId);
         console.log("New Session Generated:", sessionId);
     }
