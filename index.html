@@ -11,22 +11,88 @@
 </head>
 <body class="bg-gray-50 h-screen flex flex-col items-center justify-center">
 
+    <div id="terms-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-gray-50 transition-opacity duration-500 opacity-0">
+        <div class="bg-white w-11/12 max-w-md p-8 rounded-2xl shadow-xl transform scale-95 transition-all duration-500 border border-gray-100">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-600 shadow-sm animate-bounce">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-4 font-prompt">Terms of Use</h2>
+            <div class="text-sm text-gray-600 leading-relaxed mb-8 space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                <p>AI นี้มีหน้าที่ช่วยตอบคำถาม ให้คำแนะนำ และเสนอแนวทางแก้ไขเบื้องต้นเกี่ยวกับการใช้งานระบบ RPA และข้อสงสัยทั่วไปเท่านั้น</p>
+                <div class="bg-orange-50 p-3 rounded-lg border border-orange-100 text-orange-800 text-base">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    คำตอบที่ได้รับอาจมีความคลาดเคลื่อน หรือไม่ครอบคลุมทุกกรณี โดยเฉพาะปัญหาเชิงเทคนิคเฉพาะทาง
+                </div>
+                <p>ผู้ใช้งานควรใช้วิจารณญาณในการนำข้อมูลไปใช้งาน และควรตรวจสอบความถูกต้องกับผู้ดูแลระบบหรือผู้เชี่ยวชาญก่อนดำเนินการในขั้นตอนสำคัญ</p>
+                <p class="font-medium text-gray-800 mt-2 text-center">"การใช้งานต่อถือว่าท่านรับทราบเงื่อนไข"</p>
+            </div>
+            <button id="accept-terms-btn" disabled class="w-full py-3.5 rounded-xl font-semibold transition-all duration-300 bg-gray-200 text-gray-400 cursor-not-allowed text-sm shadow-inner">
+                กรุณารอสักครู่ (3)
+            </button>
+        </div>
+    </div> 
+    <div id="reset-modal" class="hidden fixed inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-white w-11/12 max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-all duration-300 border border-gray-100">
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500 mb-4 shadow-sm animate-pulse">
+                    <i class="fa-solid fa-trash-can text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 font-prompt">ยืนยันการล้างสนทนา?</h3>
+                <p class="text-sm text-gray-500 mt-2 leading-relaxed">
+                    ประวัติการสนทนาทั้งหมดจะถูกลบและเริ่มแชทใหม่ทันที
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <button id="cancel-reset-btn" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors text-sm">
+                    ยกเลิก
+                </button>
+                <button id="confirm-reset-btn" class="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 shadow-lg hover:shadow-red-500/30 transition-all text-sm">
+                    ล้างข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
     <div id="chat-wrapper" class="w-full max-w-3xl h-full md:h-[90vh] bg-white md:rounded-2xl shadow-xl flex flex-col overflow-hidden relative">
         
         <div class="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shadow-sm z-10 shrink-0">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 flex items-center justify-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PSU_Logo.svg/1200px-PSU_Logo.svg.png" 
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-OfxGJfH_KKInQNFbbR1XKY7ePT-L1TBKTw&s" 
                          alt="PSU Logo" 
                          class="w-full h-full object-contain">
                 </div>
                 <span class="font-semibold text-gray-700">RPA Chatbot</span>
             </div>
             
-            <button id="end-chat-btn" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                <i class="fa-solid fa-power-off"></i>
-                ล้างการสนทนา
-            </button>
+            <div class="flex items-center gap-3">
+                
+                <div id="manual-wrapper" class="relative group">
+                    <button id="manual-btn" class="text-gray-400 hover:text-indigo-600 transition-colors px-2 py-1 focus:outline-none">
+                        <i class="fa-regular fa-circle-question text-lg"></i>
+                    </button>
+
+                    <div id="manual-tooltip" class="hidden absolute top-full right-0 mt-3 w-64 bg-white p-4 rounded-xl shadow-xl border border-gray-100 z-50 text-left animate-fade-in">
+                        <div class="flex items-start gap-3">
+                            <div class="text-indigo-500 mt-1"><i class="fa-solid fa-circle-info"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm mb-1">คำแนะนำ</h4>
+                                <p class="text-xs text-gray-600 leading-relaxed">
+                                    กดปุ่ม <span class="text-red-500 font-bold">"ล้างการสนทนา"</span> ที่มุมขวาทุกครั้ง เมื่อต้องการสอบถามเรื่องใหม่
+                                </p>
+                            </div>
+                        </div>
+                        <div class="absolute -top-2 right-3 w-4 h-4 bg-white border-t border-l border-gray-100 transform rotate-45"></div>
+                    </div>
+                </div>
+
+                <button id="end-chat-btn" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                    <i class="fa-solid fa-power-off"></i>
+                    ล้างการสนทนา
+                </button>
+            </div>
         </div>
 
         <div id="chat-container" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-white scroll-smooth">

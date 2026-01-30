@@ -68,15 +68,18 @@ function sendSuggestion(text) {
 window.sendSuggestion = sendSuggestion;
 
 async function resetChat() {
-    if (!confirm("ต้องการล้างประวัติการสนทนา?")) return;
+    // ⚠️ ลบบรรทัด confirm เดิมออกไปแล้ว
     
+    // ดึง ID เก่ามาก่อน เพื่อส่งไปบอกลา n8n
     const { userId, sessionId } = getChatMetadata();
+
+    // 1. ส่ง Trigger "end_chat" ไปบอก n8n
     try {
         fetch(CONFIG.WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                [CONFIG.CHAT_INPUT_KEY]: 'จบการสนทนา',
+                [CONFIG.CHAT_INPUT_KEY]: 'จบการสนทนา', 
                 [CONFIG.TRIGGER_KEY]: 'end_chat',
                 userId: userId,
                 sessionId: sessionId
@@ -84,12 +87,17 @@ async function resetChat() {
         });
     } catch (e) { console.error("แจ้งจบการสนทนาไม่สำเร็จ", e); }
 
+    // 2. ล้างข้อมูลฝั่งหน้าเว็บ
     elements.chatContainer.innerHTML = `
         <div class="chat-bubble bot-bubble">
             สวัสดีครับ มีเรื่องสงสัยเกี่ยวกับ RPA หรือการเบิกจ่าย สอบถามผมได้เลยครับ 👇
         </div>
     `;
+    
+    // 3. ลบ Session เก่าทิ้ง
     localStorage.removeItem('rpa_session_id'); 
+    
+    // 4. คืนค่าปุ่ม FAQ กลับมา
     renderDefaultButtons();
 }
 
@@ -326,4 +334,124 @@ async function sendFeedback(btnElement, rating, messageContent) {
     } catch (e) {
         console.error("Failed to send feedback", e);
     }
+}
+
+// --- MANUAL TOOLTIP LOGIC ---
+const manualBtn = document.getElementById('manual-btn');
+const manualTooltip = document.getElementById('manual-tooltip');
+const manualWrapper = document.getElementById('manual-wrapper');
+
+if (manualBtn && manualTooltip && manualWrapper) {
+    
+
+    manualWrapper.addEventListener('mouseenter', () => {
+        manualTooltip.classList.remove('hidden');
+    });
+
+    manualWrapper.addEventListener('mouseleave', () => {
+        manualTooltip.classList.add('hidden');
+    });
+
+}
+
+// --- TERMS OF USE LOGIC ---
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById('terms-modal');
+    const acceptBtn = document.getElementById('accept-terms-btn');
+    const chatWrapper = document.getElementById('chat-wrapper'); // อ้างอิงกล่องแชท
+    
+    const hasAccepted = localStorage.getItem('rpa_terms_accepted');
+
+    if (!hasAccepted) {
+        // 1. ถ้ายังไม่ยอมรับ -> โชว์ Modal ทับทันที
+        modal.classList.remove('hidden');
+        
+        // (เทคนิค) ซ่อนกล่องแชทไว้ข้างหลังก่อน กันเผลอเห็นแว้บๆ
+        chatWrapper.classList.add('opacity-0');
+
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }, 50);
+
+        // 2. นับถอยหลัง 3 วินาที
+        let timeLeft = 3;
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                acceptBtn.innerText = `กรุณารอสักครู่ (${timeLeft})`;
+            } else {
+                clearInterval(timer);
+                acceptBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ยอมรับเงื่อนไข';
+                acceptBtn.disabled = false;
+                
+                // เปลี่ยน Style ปุ่มเป็นสีน้ำเงินสวยๆ
+                acceptBtn.className = "w-full py-3.5 rounded-xl font-semibold transition-all duration-300 bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 cursor-pointer text-sm";
+            }
+        }, 1000);
+
+        // 3. เมื่อกดปุ่มยอมรับ
+        acceptBtn.addEventListener('click', () => {
+            localStorage.setItem('rpa_terms_accepted', 'true');
+            
+            // Effect: Modal จางหายไป
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-110'); // ขยายออกนิดนึงตอนจบ
+            
+            // Effect: Chat ค่อยๆ ปรากฏขึ้นมา (Fade In)
+            chatWrapper.classList.remove('opacity-0');
+            chatWrapper.classList.add('transition-opacity', 'duration-700');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 500);
+        });
+    } else {
+        // ถ้าเคยยอมรับแล้ว -> ให้แน่ใจว่าแชทโชว์ปกติ
+        chatWrapper.classList.remove('opacity-0');
+    }
+});
+
+// --- RESET MODAL LOGIC ---
+const resetModal = document.getElementById('reset-modal');
+const confirmResetBtn = document.getElementById('confirm-reset-btn');
+const cancelResetBtn = document.getElementById('cancel-reset-btn');
+
+// 1. เปลี่ยนพฤติกรรมปุ่ม "ล้างการสนทนา" เดิม -> ให้เปิด Modal แทน
+if (elements.endChatBtn) {
+    // ลบ Event เดิมทิ้งก่อน (ถ้ามี) หรือใช้วิธี Override
+    elements.endChatBtn.replaceWith(elements.endChatBtn.cloneNode(true));
+    // ดึง Element ใหม่มาผูก Event
+    elements.endChatBtn = document.getElementById('end-chat-btn');
+    
+    elements.endChatBtn.addEventListener('click', () => {
+        resetModal.classList.remove('hidden');
+        // Animation Fade In
+        setTimeout(() => {
+            resetModal.classList.remove('opacity-0');
+            resetModal.querySelector('div').classList.remove('scale-95');
+            resetModal.querySelector('div').classList.add('scale-100');
+        }, 10);
+    });
+}
+
+// 2. ปุ่มยกเลิก (ปิด Modal)
+if (cancelResetBtn) {
+    cancelResetBtn.addEventListener('click', closeResetModal);
+}
+
+// 3. ปุ่มยืนยันสีแดง (เรียกฟังก์ชันล้างจริง)
+if (confirmResetBtn) {
+    confirmResetBtn.addEventListener('click', () => {
+        closeResetModal();
+        resetChat(); // 🔥 เรียกฟังก์ชัน resetChat (ที่เราจะแก้ข้างล่าง)
+    });
+}
+
+function closeResetModal() {
+    resetModal.classList.add('opacity-0');
+    resetModal.querySelector('div').classList.remove('scale-100');
+    resetModal.querySelector('div').classList.add('scale-95');
+    setTimeout(() => resetModal.classList.add('hidden'), 300);
 }

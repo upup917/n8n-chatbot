@@ -165,3 +165,27 @@ body { font-family: 'Prompt', sans-serif; }
 .feedback-btn.active-dislike {
     color: #EF4444; /* สีแดง */
 }
+
+/* Animation สำหรับ Tooltip */
+@keyframes fadeInTooltip {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeInTooltip 0.2s ease-out forwards;
+}
+
+/* Scrollbar สำหรับกล่อง Terms */
+#terms-modal div::-webkit-scrollbar {
+    width: 4px;
+}
+#terms-modal div::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+#terms-modal div::-webkit-scrollbar-thumb {
+    background: #d1d5db; 
+    border-radius: 4px;
+}
+#terms-modal div::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af; 
+}
