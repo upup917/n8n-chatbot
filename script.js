@@ -1,7 +1,6 @@
 // --- CONFIGURATION ---
 const CONFIG = {
-    // ⚠️ ตรวจสอบ URL นี้ให้ตรงกับ n8n Tunnel ของคุณ
-    WEBHOOK_URL: 'http://localhost:5678/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
+    WEBHOOK_URL: 'http://rpaxai.urmo.psu.ac.th/n8n/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
     RESPONSE_KEY: 'output', // Key หลักที่ n8n ส่งกลับมา
@@ -147,75 +146,49 @@ async function sendMessage(displayMessage, inputMessage, triggerCode) {
     }
 }
 
-// 🔥 ฟังก์ชันอัจฉริยะสำหรับแกะ Response (แก้ Bug ตรงนี้)
+// 🔥 ฟังก์ชันอัจฉริยะสำหรับแกะ Response (เวอร์ชัน Debug)
 function parseResponseData(data) {
+    // ปริ้นท์ข้อมูลดิบที่ได้จาก n8n ออกมาดูใน Console (กด F12 ดูได้เลย)
+    console.log("🔥 Raw Data from n8n:", data);
+
+    const item = Array.isArray(data) ? data[0] : data;
+
     let text = '';
     let options = [];
 
-    // Helper: พยายามดึง text และ options จาก object ใดๆ
-    const extract = (obj) => {
-        return {
-            t: obj[CONFIG.RESPONSE_KEY] || obj.output || obj.text || obj.response || '',
-            o: obj.options || obj.suggestions || []
-        };
-    };
+    // ดึง Text
+    if (item.output) text = item.output;
+    else if (item[CONFIG.RESPONSE_KEY]) text = item[CONFIG.RESPONSE_KEY];
+    else text = JSON.stringify(item);
 
-    // 1. ดึงจาก Data ชั้นแรกสุด
-    let extracted = extract(data);
-    text = extracted.t;
-    options = extracted.o;
-
-    // 2. ถ้า text ที่ได้มา ดันเป็น Object (Nested JSON) ให้มุดเข้าไปดึงอีกรอบ
-    if (typeof text === 'object' && text !== null) {
-        const nested = extract(text);
-        // ถ้าข้างในมี text ให้เอามาใช้
-        if (nested.t) text = nested.t;
-        // ถ้าข้างในมี options ให้เอามาทับของเดิม (เพราะแม่นยำกว่า)
-        if (nested.o && Array.isArray(nested.o) && nested.o.length > 0) {
-            options = nested.o;
-        }
-        
-        // ถ้ายังเป็น Object อยู่ ให้ลองแปลงเป็น String เพื่อเตรียม Parse ต่อ
-        if (typeof text === 'object') text = JSON.stringify(text);
-    }
-
-    // 3. ถ้า text เป็น String และหน้าตาเหมือน JSON (เช่น AI ตอบมาเป็น JSON String)
-    if (typeof text === 'string') {
-        // ล้าง Markdown Code Block ออกก่อน (```json ... ```)
-        const cleanJson = text.trim()
-            .replace(/^```json/i, '')
-            .replace(/^```/i, '')
-            .replace(/```$/i, '')
-            .trim();
-
-        if (cleanJson.startsWith('{') || cleanJson.startsWith('[')) {
-            try {
-                const parsed = JSON.parse(cleanJson);
-                const parsedData = extract(parsed);
-                
-                // อัปเดต text และ options จาก JSON ที่แกะได้
-                if (parsedData.t) text = parsedData.t;
-                if (parsedData.o && Array.isArray(parsedData.o) && parsedData.o.length > 0) {
-                    options = parsedData.o;
-                }
-            } catch (e) {
-                // ถ้า Parse ไม่ผ่าน ก็ใช้ text เดิมไป
-                console.log("Not a valid JSON string, using raw text.");
-            }
+    // ดึง Options (เพิ่มตัวกันเหนียว เผื่อ n8n ส่งมาเป็น String)
+    if (Array.isArray(item.options)) {
+        options = item.options;
+    } else if (typeof item.options === 'string') {
+        // ถ้าเป็น String (เช่น "[{...}]") ให้ลองแปลงเป็น Array
+        try {
+            options = JSON.parse(item.options);
+        } catch (e) {
+            console.error("❌ Error parsing options string:", e);
         }
     }
 
-    // 4. จัดรูปแบบข้อความสุดท้าย (ลบ Quote, เปลี่ยน \n เป็น <br>)
+    console.log("✅ Final Parsed:", { text, options }); // เช็คผลลัพธ์สุดท้าย
+
+    // จัดรูปแบบ Text
     let formattedText = '';
     if (typeof text === 'string') {
-        formattedText = text.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\n/g, '<br>');
+        formattedText = text
+            .replace(/^"|"$/g, '')
+            .replace(/\\n/g, '\n')
+            .replace(/\n/g, '<br>');
     } else {
-        formattedText = JSON.stringify(text); // กันเหนียว
+        formattedText = JSON.stringify(text);
     }
 
     return { finalMessage: formattedText, finalOptions: options };
 }
-
+ 
 // ฟังก์ชันสร้างปุ่มตัวเลือก
 function renderQuickReplies(options) {
     const container = elements.quickReplies;
