@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 const CONFIG = {
-    WEBHOOK_URL: 'http://rpaxai.urmo.psu.ac.th/n8n/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
+    WEBHOOK_URL: 'http://rpaxai.urmo.psu.ac.th/n8n/webhook/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
     RESPONSE_KEY: 'output', // Key หลักที่ n8n ส่งกลับมา
