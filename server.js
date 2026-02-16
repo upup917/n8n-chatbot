@@ -16,6 +16,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+app.get('/config.js', (req, res) => {
+    res.type('application/javascript');
+    const webhookUrl = process.env.N8N_WEBHOOK_URL || '';
+    res.send(`window.__WEBHOOK_URL = ${JSON.stringify(webhookUrl)};`);
+});
+
 // ตั้งค่าเชื่อมต่อ PostgreSQL
 const pool = new Pool({
     host: process.env.DB_HOST || '127.0.0.1',

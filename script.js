@@ -5,7 +5,7 @@ const FAQ_API_URL = window.__FAQ_API_URL
     || (canUsePageHost ? `${window.location.protocol}//${window.location.hostname}:5000/api/faq` : DEFAULT_FAQ_API_URL);
 
 const CONFIG = {
-    WEBHOOK_URL: 'https://rpaxai.urmo.psu.ac.th/n8n/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
+    WEBHOOK_URL: window.__WEBHOOK_URL || 'https://rpaxai.urmo.psu.ac.th/n8n/webhook/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
     FAQ_API_URL, // 🔥 API สำหรับดึงคำถาม FAQ จาก PostgreSQL
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
