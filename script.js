@@ -1,7 +1,12 @@
 // --- CONFIGURATION ---
+const DEFAULT_FAQ_API_URL = 'http://10.4.1.40:5000/api/faq';
+const canUsePageHost = window.location.protocol !== 'file:' && !!window.location.hostname;
+const FAQ_API_URL = window.__FAQ_API_URL
+    || (canUsePageHost ? `${window.location.protocol}//${window.location.hostname}:5000/api/faq` : DEFAULT_FAQ_API_URL);
+
 const CONFIG = {
     WEBHOOK_URL: 'https://rpaxai.urmo.psu.ac.th/n8n/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
-    FAQ_API_URL: 'http://localhost:5000/api/faq', // 🔥 API สำหรับดึงคำถาม FAQ จาก PostgreSQL
+    FAQ_API_URL, // 🔥 API สำหรับดึงคำถาม FAQ จาก PostgreSQL
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
     RESPONSE_KEY: 'output', // Key หลักที่ n8n ส่งกลับมา

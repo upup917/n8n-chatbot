@@ -1,22 +1,29 @@
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const PORT = 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // เปิด CORS เพื่อให้ frontend เรียกใช้ได้
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // ตั้งค่าเชื่อมต่อ PostgreSQL
 const pool = new Pool({
-    host: '10.4.1.40',
-    port: 5432,
-    database: 'postgres',
-    user: 'user_beta',
-    password: 'hello#mas',
-    ssl: false // ถ้า server ต้องการ SSL ให้เปลี่ยนเป็น true
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    database: process.env.DB_NAME || 'postgres',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    ssl: (process.env.DB_SSL || 'false') === 'true'
 });
 
 // API endpoint สำหรับดึงคำถามจากตาราง faq
