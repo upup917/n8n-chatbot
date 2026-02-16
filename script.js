@@ -1,6 +1,7 @@
 // --- CONFIGURATION ---
 const CONFIG = {
-    WEBHOOK_URL: 'http://rpaxai.urmo.psu.ac.th/n8n/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
+    WEBHOOK_URL: 'https://rpaxai.urmo.psu.ac.th/n8n/webhook-test/21c6544a-7af4-4b9b-ab08-6ab41456a75d',
+    FAQ_API_URL: 'http://localhost:5000/api/faq', // 🔥 API สำหรับดึงคำถาม FAQ จาก PostgreSQL
     CHAT_INPUT_KEY: 'chatInput',
     TRIGGER_KEY: 'trigger',
     RESPONSE_KEY: 'output', // Key หลักที่ n8n ส่งกลับมา
@@ -212,19 +213,67 @@ function renderQuickReplies(options) {
 
 function renderDefaultButtons() {
     const container = elements.quickReplies;
+    container.innerHTML = '<div class="text-xs text-gray-400 text-center py-2">กำลังโหลด FAQ...</div>';
+    container.classList.remove('hidden');
+    
+    // 🔥 ดึงคำถามจาก API
+    fetchFAQFromAPI();
+}
+
+// 🔥 ฟังก์ชันดึงคำถาม FAQ จาก PostgreSQL ผ่าน API
+async function fetchFAQFromAPI() {
+    try {
+        const response = await fetch(CONFIG.FAQ_API_URL);
+        const data = await response.json();
+        const container = elements.quickReplies;
+        const questions = Array.isArray(data?.questions) ? data.questions : [];
+        
+        if (data.success) {
+            container.innerHTML = ''; // ล้างข้อความโหลด
+
+            // รองรับ FAQ 0-3 ข้อ (หรือมากกว่า) ตามข้อมูลจริงจากหลังบ้าน
+            if (questions.length === 0) {
+                container.innerHTML = '';
+                container.classList.remove('hidden');
+                return;
+            }
+
+            questions.forEach((question) => {
+                const btn = document.createElement('button');
+                btn.className = 'chip-btn';
+                btn.onclick = () => sendSuggestion(question);
+                btn.innerHTML = question;
+                container.appendChild(btn);
+            });
+
+            container.classList.remove('hidden');
+            return;
+        }
+
+        // กรณี API ตอบ success=false
+        renderFallbackButtons();
+    } catch (error) {
+        console.error('Error fetching FAQ:', error);
+        // ถ้า API ล้มเหลว ให้ใช้ปุ่มเดิม
+        renderFallbackButtons();
+    }
+}
+
+// ฟังก์ชัน fallback กรณี API ไม่ทำงาน
+function renderFallbackButtons() {
+    const container = elements.quickReplies;
     container.innerHTML = `
         <button onclick="sendSuggestion('ผมเบิกเงินไม่ได้')" class="chip-btn">
-            <i class="fa-solid fa-money-bill-wave mr-1"></i> ผมเบิกเงินไม่ได้
+            💰 ผมเบิกเงินไม่ได้
         </button>
         <button onclick="sendSuggestion('สามารถดูประวัติการเบิกได้จากไหน')" class="chip-btn">
-            <i class="fa-solid fa-receipt mr-1"></i> ดูประวัติการเบิก
+            📋 ดูประวัติการเบิก
         </button>
         <button onclick="sendSuggestion('สวัสดีครับ คุณสามารถทำอะไรได้บ้าง')" class="chip-btn">
-            <i class="fa-solid fa-robot mr-1"></i> สวัสดีครับ คุณสามารถทำอะไรได้บ้าง
+            🤖 สวัสดีครับ คุณสามารถทำอะไรได้บ้าง
         </button>
     `;
     container.classList.remove('hidden');
-    setTimeout(scrollToBottom, 100);
 }
 
 function addMessage(text, sender) {
@@ -428,3 +477,8 @@ function closeResetModal() {
     resetModal.querySelector('div').classList.add('scale-95');
     setTimeout(() => resetModal.classList.add('hidden'), 300);
 }
+
+// --- 🔥 โหลดปุ่ม FAQ จาก Database ตอนเปิดหน้าเว็บ ---
+document.addEventListener('DOMContentLoaded', () => {
+    renderDefaultButtons();
+});

@@ -103,20 +103,9 @@
 
         <div class="p-4 bg-white border-t border-gray-100 relative shrink-0 flex flex-col gap-2">
             
-            <div id="quick-replies" class="w-full flex gap-2 overflow-x-auto no-scrollbar z-20 pb-1">
-                
-                <button onclick="sendSuggestion('ผมเบิกเงินไม่ได้')" class="chip-btn">
-                    <i class="fa-solid fa-money-bill-wave mr-1"></i> ผมเบิกเงินไม่ได้
-                </button>
-
-                <button onclick="sendSuggestion('สามารถดูประวัติการเบิกได้จากไหน')" class="chip-btn">
-                    <i class="fa-solid fa-receipt mr-1"></i> ดูประวัติการเบิก
-                </button>
-
-                <button onclick="sendSuggestion('สวัสดีครับ คุณสามารถทำอะไรได้บ้าง')" class="chip-btn">
-                    <i class="fa-solid fa-robot mr-1"></i> สวัสดีครับ คุณสามารถทำอะไรได้บ้าง
-                </button>
-
+            <!-- 🔥 ปุ่ม FAQ จะถูกสร้างโดย JavaScript แบบ dynamic -->
+            <div id="quick-replies" class="w-full flex flex-nowrap gap-2 overflow-x-auto no-scrollbar z-20 pb-1">
+                <div class="text-xs text-gray-400 text-center py-2">กำลังโหลด FAQ...</div>
             </div>
 
             <div class="relative flex items-center max-w-4xl mx-auto w-full">

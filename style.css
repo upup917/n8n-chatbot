@@ -96,6 +96,14 @@ body { font-family: 'Prompt', sans-serif; }
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* เพิ่มการเลื่อนแบบ smooth บนมือถือ */
+}
+
+#quick-replies {
+    /* เพิ่ม gradient เพื่อบอกว่าเลื่อนได้ */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%);
 }
 
 /* ดีไซน์ปุ่ม Quick Reply (Chip Style) */
